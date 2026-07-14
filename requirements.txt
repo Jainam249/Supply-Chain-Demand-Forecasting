@@ -5,9 +5,9 @@ seaborn
 plotly
 scikit-learn
 statsmodels
+scipy
 streamlit
 jupyter
 notebook
 openpyxl
-scipy
-streamlit
+ipykernel
