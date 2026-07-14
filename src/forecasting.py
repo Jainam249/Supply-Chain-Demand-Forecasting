@@ -7,6 +7,8 @@ Forecasting project.
 
 import numpy as np
 import pandas as pd
+from collections import deque
+
 
 from statsmodels.tsa.arima.model import ARIMA
 
@@ -58,16 +60,15 @@ def moving_average_forecast(train, test, column="sales", window=7):
         Forecast values.
     """
 
-    history = list(train[column])
+    history = deque(
+        train[column].tail(window).to_numpy(dtype=np.float64), maxlen=window
+    )
 
-    predictions = []
+    test_values = test[column].to_numpy(dtype=np.float64)
+    predictions = np.empty(len(test_values), dtype=np.float64)
 
-    for actual in test[column]:
-
-        prediction = np.mean(history[-window:])
-
-        predictions.append(prediction)
-
+    for i, actual in enumerate(test_values):
+        predictions[i] = np.mean(history)
         history.append(actual)
 
     return predictions

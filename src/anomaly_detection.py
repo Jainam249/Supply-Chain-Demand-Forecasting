@@ -8,6 +8,7 @@ using statistical and machine learning techniques.
 import pandas as pd
 from scipy.stats import zscore
 from sklearn.ensemble import IsolationForest
+from scipy.stats import zscore
 
 
 def detect_zscore(df, column="sales", threshold=3):
@@ -23,16 +24,14 @@ def detect_zscore(df, column="sales", threshold=3):
         DataFrame
     """
 
-    result = df.copy()
+    df["z_score"] = zscore(df[column].values)
 
-    result["z_score"] = zscore(result[column])
+    df["z_anomaly"] = df["z_score"].abs() > threshold
 
-    result["z_anomaly"] = result["z_score"].abs() > threshold
-
-    return result
+    return df
 
 
-def detect_iqr(df, column="sales"):
+def detect_iqr(df, column="sales", factor=1.5):
     """
     Detect anomalies using the Interquartile Range (IQR).
 
@@ -44,19 +43,17 @@ def detect_iqr(df, column="sales"):
         DataFrame
     """
 
-    result = df.copy()
+    Q1 = df[column].quantile(0.25)
+    Q3 = df[column].quantile(0.75)
 
-    q1 = result[column].quantile(0.25)
-    q3 = result[column].quantile(0.75)
+    IQR = Q3 - Q1
 
-    iqr = q3 - q1
+    lower_bound = Q1 - factor * IQR
+    upper_bound = Q3 + factor * IQR
 
-    lower = q1 - (1.5 * iqr)
-    upper = q3 + (1.5 * iqr)
+    df["iqr_anomaly"] = (df[column] < lower_bound) | (df[column] > upper_bound)
 
-    result["iqr_anomaly"] = (result[column] < lower) | (result[column] > upper)
-
-    return result
+    return df
 
 
 def detect_isolation_forest(df, column="sales", contamination=0.01, random_state=42):
@@ -73,12 +70,29 @@ def detect_isolation_forest(df, column="sales", contamination=0.01, random_state
         DataFrame
     """
 
-    result = df.copy()
+    model = IsolationForest(
+        contamination=contamination,
+        random_state=random_state,
+        n_estimators=100,
+        n_jobs=-1,
+    )
 
-    model = IsolationForest(contamination=contamination, random_state=random_state)
+    # Train using a sample
+    sample_size = min(200000, len(df))
 
-    result["iforest"] = model.fit_predict(result[[column]])
+    train_data = df[[column]].sample(sample_size, random_state=random_state)
 
-    result["iforest_anomaly"] = result["iforest"] == -1
+    model.fit(train_data)
 
-    return result
+    # Predict in batches to avoid large memory usage
+    batch_size = 100000
+    predictions = []
+
+    for start in range(0, len(df), batch_size):
+        batch = df[[column]].iloc[start : start + batch_size]
+        predictions.extend(model.predict(batch))
+
+    df["iforest"] = predictions
+    df["iforest_anomaly"] = df["iforest"] == -1
+
+    return df
