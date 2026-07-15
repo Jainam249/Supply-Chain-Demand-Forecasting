@@ -302,7 +302,7 @@ https://github.com/Jainam249
 
 # ⭐ Acknowledgements
 
-This project was completed as part of the **Infotact Technical Internship Program** to demonstrate practical skills in:
+This project was completed as part of the **Infotact Solutions Internship Program** to demonstrate practical skills in:
 
 - Data Analytics
 - Time Series Forecasting
