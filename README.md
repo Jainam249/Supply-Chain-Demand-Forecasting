@@ -5,7 +5,6 @@
 ![Streamlit](https://img.shields.io/badge/Streamlit-Dashboard-red)
 ![Scikit-Learn](https://img.shields.io/badge/Scikit--Learn-ML-yellow)
 ![Statsmodels](https://img.shields.io/badge/Statsmodels-Time%20Series-green)
-![License](https://img.shields.io/badge/License-MIT-lightgrey)
 
 ---
 
